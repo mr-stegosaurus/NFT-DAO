@@ -41,7 +41,7 @@ interface ICryptoDevsNFT {
 }
 
 contract CryptoDevsDAO is Ownable {
-    IFakeNFTMarketplace nftMarketplace;
+    IFakeNFTMarketPlace nftMarketplace;
     ICryptoDevsNFT cryptoDevsNFT;
 
     //Struct containing all relevant proposal info
@@ -53,7 +53,7 @@ contract CryptoDevsDAO is Ownable {
         // yayVotes - number of yay votes for this proposal
         uint256 yayVotes;
         // nayVotes - number of nay votes for this proposal
-        uint256 nayvotes;
+        uint256 nayVotes;
         // executed - whether or not this proposal has been executed yet. Cannot be execued before the deadline has been exceeded
         bool executed;
         // voters - a mapping of CryptoDevNFT tokenIDs to booleans indicating whether that NFT has already been used to cast a vote
@@ -131,7 +131,7 @@ contract CryptoDevsDAO is Ownable {
         // that haven't already been used for voting on this proposal
         for (uint256 i = 0; i < voterNFTBalance; i++) {
             uint256 tokenId = cryptoDevsNFT.tokenOfOwnerByIndex(msg.sender, i);
-            if (proposal.voters[tokenIds] == false) {
+            if (proposal.voters[tokenId] == false) {
                 numVotes++;
                 proposal.voters[tokenId] = true;
             }
@@ -167,7 +167,7 @@ contract CryptoDevsDAO is Ownable {
         Proposal storage proposal = proposals[proposalIndex];
 
         // if the proposal has mor YAY votes than NAY votes, purchase the NFT from the FakeNFTMarketplace
-        if (proposal.yayVotes > proposal.nayvotes) {
+        if (proposal.yayVotes > proposal.nayVotes) {
             uint256 nftPrice = nftMarketplace.getPrice();
             require(address(this).balance >= nftPrice, "NOT_ENOUGH_FUNDS");
             nftMarketplace.purchase{value: nftPrice}(proposal.nftTokenId);
