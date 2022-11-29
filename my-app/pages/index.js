@@ -77,6 +77,22 @@ export default function Home() {
     }
   };
 
+  // calls the create proposal function in the contract, using the tokenId from 'fakeNftTokenId'
+  const createProposal = async () => {
+    try {
+      const signer = await getProviderOrSigner(true);
+      const daoContract = getDaoContractInstance(signer);
+      const txn = await daoContract.createProposal(fakeNftTokenId);
+      setLoading(true);
+      await txn.wait();
+      await getNumProposalsInDAO();
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      window.alert(error.data.message);
+    }
+  };
+
   const getProviderOrSigner = async (needSigner = false) => {
     const provider = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(provider);
