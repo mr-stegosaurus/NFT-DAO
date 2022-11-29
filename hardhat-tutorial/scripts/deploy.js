@@ -11,7 +11,7 @@ async function main() {
 
   console.log("FakeNFTMarketplace deployed to: ", fakeNftMarketplace.address);
 
-  // now doploye the CryptoDevsDAO contract
+  // now deploy the CryptoDevsDAO contract
   const CryptoDevsDAO = await ethers.getContractFactory("CryptoDevsDAO");
   const cryptoDevsDAO = await CryptoDevsDAO.deploy(
     fakeNftMarketplace.address,
