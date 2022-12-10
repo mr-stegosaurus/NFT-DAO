@@ -77,7 +77,7 @@ export default function Home() {
     }
   };
 
-  // calls the create proposal function in the contract, using the tokenId from 'fakeNftTokenId'
+  // calls the 'createproposal' function in the contract, using the tokeId from 'fakeNftTokenId'
   const createProposal = async () => {
     try {
       const signer = await getProviderOrSigner(true);
@@ -88,10 +88,87 @@ export default function Home() {
       await getNumProposalsInDAO();
       setLoading(false);
     } catch (error) {
+      console.log(error);
+      window.alert(error.data.message);
+    }
+  };
+
+  // Helper function to fetch and parse one proposal from the DAO contract
+  // Given the Proposal ID
+  // and converts the returned data into a Javascript object with values we can use
+  const fetchProposalById = async (id) => {
+    try {
+      const provider = await getProviderOrSigner();
+      const daoContract = getDaoContractInstance(provider);
+      const proposal = await daoContract.proposals(id);
+      const parsedProposal = {
+        proposalId: id,
+        nftTokenId: proposal.nftTokenId.toString(),
+        deadline: new Date(parseInt(proposal.deadline.toString()) * 1000),
+        yayVotes: proposal.yayVotes.toString(),
+        nayVotes: proposal.nayVotes.toString(),
+        executed: proposal.executed,
+      };
+      return parsedProposal;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Runs a loop `numProposals` times to fetch all proposals in the DAO
+  // and sets the `proposals` state variable
+  const fetchAllProposals = async () => {
+    try {
+      const proposals = [];
+      for (let i = 0; i < numProposals; i++) {
+        const proposal = await fetchProposalById(i);
+        proposals.push(proposal);
+      }
+      setProposals(proposals);
+      return proposals;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Calls the `voteOnProposal` function in the contract, using the passed
+  // proposal ID and Vote
+  const voteOnProposal = async (proposalId, _vote) => {
+    try {
+      const signer = await getProviderOrSigner(true);
+      const daoContract = getDaoContractInstance(signer);
+
+      let vote = _vote === "YAY" ? 0 : 1;
+      const txn = await daoContract.voteOnProposal(proposalId, vote);
+      setLoading(true);
+      await txn.wait();
+      setLoading(false);
+      await fetchAllProposals();
+    } catch (error) {
       console.error(error);
       window.alert(error.data.message);
     }
   };
+
+  // Calls the `executeProposal` function in the contract, using
+  // the passed proposal ID
+  const executeProposal = async (proposalId) => {
+    try {
+      const signer = await getProviderOrSigner(true);
+      const daoContract = getDaoContractInstance(signer);
+      const txn = await daoContract.executeProposal(proposalId);
+      setLoading(true);
+      await txn.wait();
+      setLoading(false);
+      await fetchAllProposals();
+      getDAOTreasuryBalance();
+    } catch (error) {
+      console.error(error);
+      window.alert(error.data.message);
+    }
+  };
+
+
 
   const getProviderOrSigner = async (needSigner = false) => {
     const provider = await web3ModalRef.current.connect();
@@ -165,13 +242,13 @@ export default function Home() {
     if (selectedTab === "Create Proposal") {
       return renderCreateProposalTab();
     } else if (selectedTab === "View Proposals") {
-      return renderViewProposalsTabs();
+      return renderViewProposalsTab();
     }
     return null;
   }
 
   // renders the 'create propsal' tab content
-  function renderCreatePrposalTab() {
+  function renderCreateProposalTab() {
     if (loading) {
       return (
         <div className={styles.description}>
